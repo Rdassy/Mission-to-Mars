@@ -19,6 +19,7 @@ def scrape_all():
         "news_paragraph": news_paragraph,
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
+        "hemispheres": hemisphere_data(browser),
         "last_modified": dt.datetime.now()
     }
 
@@ -96,6 +97,58 @@ def mars_facts():
 
     # Convert dataframe into HTML format, add bootstrap
     return df.to_html(classes="table table-striped")
+
+# ### Hemispheres
+def hemisphere_data(browser):
+    try:
+        # 1. Use browser to visit the URL 
+        url = 'https://marshemispheres.com/'
+
+        browser.visit(url)
+
+        # 2. Create a list to hold the images and titles.
+        hemisphere_image_urls = []
+
+        # 3. Write code to retrieve the image urls and titles for each hemisphere.
+        html = browser.html
+        mars_soup = soup(html, 'html.parser')
+        results = mars_soup.find_all('div', class_='description')
+
+        # Loop through images to collect desired data
+        for res in results:
+            
+            #Get image title 
+            title = res.find('h3').text
+            
+            #Find and click on image link   
+            hemi_page = browser.find_by_tag('h3')
+            hemi_page.click()
+            
+            # Locate image href and make full URL 
+            new_html = browser.html
+            re_soup = soup(new_html, 'html.parser')
+            img = re_soup.find('div', class_ = 'downloads')
+            
+            #Find current page URL  
+            base_url = browser.url
+            
+            #Find full res image href    
+            jpg_href = img.find('a')['href']
+            
+            #Append href to URL  
+            jpg_url = base_url+jpg_href
+            
+            # Add variables to dictionary
+            holding_dict = dict({'img_url': jpg_url, 'title': title})
+            hemisphere_image_urls.append(holding_dict)
+            
+        #     # Return to previous page before repeating loop 
+            browser.back()
+        
+        return hemisphere_image_urls
+    
+    except AttributeError:
+        return None
 
 if __name__ == "__main__":
 
